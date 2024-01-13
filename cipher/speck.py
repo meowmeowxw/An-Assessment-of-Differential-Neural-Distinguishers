@@ -76,6 +76,7 @@ class Speck(AbstractCipher):
         :param key: The key
         :return: A list of round keys
         """
+        # print(f"{key=}")
         ks = [0 for i in range(self.n_rounds)]
         ks[0] = key[len(key)-1]
         l = list(reversed(key[:len(key)-1]))

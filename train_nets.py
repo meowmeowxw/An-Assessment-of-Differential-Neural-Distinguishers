@@ -62,7 +62,7 @@ def make_resnet(
 
 
 def train_distinguisher(
-        cipher, diff, n_train_samples=10**7, n_val_samples=10**6, n_epochs=80, depth=10, n_neurons=64, kernel_size=3,
+        cipher, diff, n_train_samples=10**7, n_val_samples=10**6, n_epochs=3, depth=10, n_neurons=64, kernel_size=3,
         n_filters=32, reg_param=10 ** -5, lr_high=0.002, lr_low=0.0001, cconv=False, calc_back=0
 ):
     n_rounds = cipher.get_n_rounds()
@@ -76,7 +76,9 @@ def train_distinguisher(
     net.compile(optimizer='adam', loss='mse', metrics=['acc'])
     # generate training and validation data
     X, Y = make_train_data(n_train_samples, cipher, diff, calc_back)
+    print("[*] DONE train data")
     X_eval, Y_eval = make_train_data(n_val_samples, cipher, diff, calc_back)
+    print("[*] DONE eval data")
     # set up model checkpoint
     check = make_checkpoint(f'{result_base_name}.h5')
     # create learnrate schedule

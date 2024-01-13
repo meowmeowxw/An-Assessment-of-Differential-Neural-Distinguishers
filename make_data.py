@@ -3,6 +3,7 @@ import numpy as np
 
 from cipher.simon import Simon
 from cipher.speck import Speck
+from cipher.des import DES
 
 
 def convert_to_binary(arr, n_words, word_size) -> np.ndarray:
@@ -70,6 +71,23 @@ def preprocess_samples(ct0, ct1, pt0, pt1, cipher, calc_back=0, data_format=None
     # convert to binary and return
     return convert_to_binary(np.concatenate((ct0, ct1), axis=0), cipher.get_n_words(), cipher.get_word_size())
 
+def make_train_data_des(n_samples, cipher, diff, calc_back=0) -> (np.ndarray, np.ndarray):
+    des = cipher
+    y = np.frombuffer(urandom(n_samples), dtype=np.uint8) & 1
+    pt0 = des.draw_plaintexts(n_samples)
+    pt1 = pt0 ^ np.array(diff, dtype=np.uint32)[:, np.newaxis]
+    num_rand_samples = np.sum(y == 0)
+    pt1[:, y == 0] = des.draw_plaintexts(num_rand_samples)
+    
+    ct0 = np.zeros(pt0.shape, dtype=np.uint32)
+    ct1 = np.zeros(pt0.shape, dtype=np.uint32)
+
+    for i in range(n_samples):
+        key = des.draw_keys(1)
+        ct0[:, i] = des.encrypt(pt0[:,i], key)[:, 0]
+        ct1[:, i] = des.encrypt(pt1[:,i], key)[:, 0]
+    x = preprocess_samples(ct0, ct1, pt0, pt1, cipher, calc_back, data_format=None)
+    return x, y
 
 def make_train_data(
         n_samples, cipher, diff, calc_back=0, y=None, additional_conditions=None, data_format=None
@@ -84,12 +102,15 @@ def make_train_data(
     :param data_format: Allows to specify a special data format
     :return: Training/validation samples
     """
+    # n_samples = 4000000
+    print(f"[!] {n_samples}")
+    if cipher.__class__ == DES:
+        return make_train_data_des(n_samples, cipher, diff)
     # generate labels
     if y is None:
         y = np.frombuffer(urandom(n_samples), dtype=np.uint8) & 1
     elif y == 0 or y == 1:
         y = np.array([y for _ in range(n_samples)], dtype=np.uint8)
-    # draw keys and plaintexts
     keys = cipher.draw_keys(n_samples)
     pt0 = cipher.draw_plaintexts(n_samples)
     if additional_conditions is not None:
@@ -99,8 +120,11 @@ def make_train_data(
     num_rand_samples = np.sum(y == 0)
     pt1[:, y == 0] = cipher.draw_plaintexts(num_rand_samples)
     # encrypt
+    # print(f"{pt0[:10]=}, {keys[:10]=}, {pt1[:10]=}")
+    print("[!] encrypting..")
     ct0 = cipher.encrypt(pt0, keys)
     ct1 = cipher.encrypt(pt1, keys)
+    print("[!] encryption done")
     # perform backwards calculation and other preprocessing
     x = preprocess_samples(ct0, ct1, pt0, pt1, cipher, calc_back, data_format)
     return x, y

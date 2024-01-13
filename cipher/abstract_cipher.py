@@ -161,9 +161,11 @@ class AbstractCipher(ABC):
         """
         if self.use_key_schedule:
             bytes_per_word = self.bytes_per_word(self.main_key_word_size)
+            # print(bytes_per_word)
             main_key = np.frombuffer(
                 urandom(self.n_main_key_words * bytes_per_word * n_samples), dtype=self.main_key_word_dtype
             ).reshape(self.n_main_key_words, n_samples)
+            # print(f"{main_key=}")
             if self.main_key_word_size < 8:
                 # Note: If the word size is greater than 8, it will always fit the dtype for the ciphers we use
                 main_key = np.right_shift(main_key, 8 - self.main_key_word_size)
