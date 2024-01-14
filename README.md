@@ -1,3 +1,22 @@
+# Additional scripts
+
+The class that implements a vectorized version of DES is [des_vectorized:DESV](./cipher/des_vectorised.py)
+
+To evaluate DES with 3-Rounds run:
+
+```py
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 ./eval_desv.py
+```
+
+The models are in [./freshly_trained_nets](./freshly_trained_nets/).
+
+Modify the source in [train_desv.py](./train_desv.py) specifying the distinguisher and number of rounds to train the model.
+
+# Original README
+
 # Supplementary Code for the Paper _An Assessment of Differential-Neural Distinguishers_.
 
 **Note:** This Git repository uses git submodules to have access to the neural networks from literature. In order to clone them, run `git submodule init` and `git submodule update` (or copy the two git repositories in the corresponding directories if you have not cloned this repository).
